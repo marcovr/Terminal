@@ -145,6 +145,10 @@ public class Buffer {
     }
 
     public String getSelection() {
+        if (selectionStart == null) {
+            return "";
+        }
+
         StringBuilder sb = new StringBuilder();
 
         int x = selectionStart.x;

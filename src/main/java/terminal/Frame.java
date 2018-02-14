@@ -4,6 +4,9 @@ import javax.swing.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
+/**
+ * Terminal window
+ */
 public class Frame {
 
     private static JFrame frame;
@@ -11,11 +14,15 @@ public class Frame {
     private Panel termPanel;
     private final Terminal terminal;
 
-    public Frame() {
+    /**
+     * initialises the terminal window
+     */
+    private Frame() {
 
         terminal = new Terminal(frame);
         termPanel.init(terminal);
 
+        // Properly close
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -24,9 +31,12 @@ public class Frame {
             }
         });
 
-        terminal.connect("ras.pi");
+        terminal.connect("ras.pi"); // TODO: make changeable
     }
 
+    /**
+     * Opens a new Window containing a terminal panel
+     */
     public static void launch() {
         frame = new JFrame("Terminal");
         frame.setContentPane(new Frame().contentPanel);

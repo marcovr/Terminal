@@ -8,6 +8,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
+/**
+ * Terminal panel derived from JPanel
+ */
 public class Panel extends JPanel {
 
     private Buffer buffer;
@@ -16,16 +19,25 @@ public class Panel extends JPanel {
 
     private static final int REFRESH_RATE = 60;
 
+    /**
+     * Creates a new terminal panel
+     */
     public Panel() {
         setPreferredSize(new Dimension(642, 386));
         setFocusable(true);
         setCursor(new Cursor(Cursor.TEXT_CURSOR));
     }
 
+    /**
+     * Initialises the terminal panel and starts a thread checking for refreshes.
+     *
+     * @param terminal the terminal to interact with
+     */
     public void init(Terminal terminal) {
         this.terminal = terminal;
         buffer = terminal.getBuffer();
 
+        // repaint on focus change
         addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
@@ -51,20 +63,33 @@ public class Panel extends JPanel {
             return false;
         });
 
-        new Thread(this::refresh).start();
+        new Thread(this::refreshCheck).start();
     }
 
+    /**
+     * Stops the refresh thread
+     */
     public void shutdown() {
         running = false;
     }
 
+    /**
+     * Overrides default paint method with custom one.
+     *
+     * @param g the graphics object
+     */
     @Override
     protected void paintComponent(Graphics g) {
-        paint((Graphics2D)g);
+        _paintComponent((Graphics2D)g);
         //super.paintComponent(g);
     }
 
-    private void paint(Graphics2D g) {
+    /**
+     * Uses {@link BufferPainter} to paint the terminal buffer, or a red square if none available
+     *
+     * @param g the graphics object
+     */
+    private void _paintComponent(Graphics2D g) {
         g.setColor(CellStyle.getBackground());
         g.fillRect(0, 0, getWidth(), getHeight());
 
@@ -79,20 +104,28 @@ public class Panel extends JPanel {
         g.fillRect(0, 0, 1, getHeight());
     }
 
-    private void refresh() {
-        Thread.currentThread().setName("PanelPainter");
+    /**
+     * Tests whether or not the terminal buffer needs to be repainted.
+     */
+    private void refreshCheck() {
+        Thread.currentThread().setName("RefreshChecker");
         while (running) {
             try {
                 Thread.sleep(1000 / REFRESH_RATE);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+
+            // if buffer exists and is tainted, repaint
             if (buffer != null && buffer.tainted.getAndSet(false)) {
                 repaint();
             }
         }
     }
 
+    /**
+     * Unites MouseEventListeners for terminal panel
+     */
     private class MouseMultiListener implements MouseListener, MouseMotionListener {
 
         private final int NONE = 0;
@@ -104,6 +137,7 @@ public class Panel extends JPanel {
 
         @Override
         public void mouseClicked(MouseEvent e) {
+            // paste on right-click
             if (e.getButton() == MouseEvent.BUTTON3) {
                 terminal.paste();
             }
@@ -111,6 +145,7 @@ public class Panel extends JPanel {
 
         @Override
         public void mousePressed(MouseEvent e) {
+            // start drag on left-press
             if (e.getButton() == MouseEvent.BUTTON1) {
                 dragState = CAN_DRAG;
                 dragStart = e.getPoint();
@@ -120,6 +155,7 @@ public class Panel extends JPanel {
 
         @Override
         public void mouseReleased(MouseEvent e) {
+            // stop dragging on left-release
             if (e.getButton() == MouseEvent.BUTTON1) {
                 if (dragState == DRAGGING) {
                     terminal.copy();
@@ -139,6 +175,7 @@ public class Panel extends JPanel {
 
         @Override
         public void mouseDragged(MouseEvent e) {
+            // if dragging, notify terminal of new mouse position
             if (dragState != NONE) {
                 Point dragEnd = e.getPoint();
                 dragEnd.translate(0, -1);
