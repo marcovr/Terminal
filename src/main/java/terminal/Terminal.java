@@ -78,6 +78,7 @@ public class Terminal {
             new CommandHandler(this).start();
         } catch (IOException e) {
             e.printStackTrace();
+            handler = null;
             println(e.toString());
         }
     }
@@ -87,6 +88,7 @@ public class Terminal {
      */
     public void disconnect() {
         handler.disconnect();
+        handler = null;
     }
 
     /**
@@ -124,6 +126,21 @@ public class Terminal {
     }
 
     /**
+     * Resize terminal
+     *
+     * @param cols number of columns
+     * @param rows number of rows
+     * @param width in pixel
+     * @param height in pixel
+     */
+    public void resize(int cols, int rows, int width, int height) {
+        if (handler != null) {
+            handler.resizeShell(cols, rows, width, height);
+            buffer.resize(cols, rows);
+        }
+    }
+
+    /**
      * Copies the text from the selected buffer area to the clipboard
      */
     public void copy() {
@@ -134,9 +151,11 @@ public class Terminal {
      * Pastes any text from the clipboard as input
      */
     public void paste() {
-        try {
-            handler.send((String) getClipboard().getData(DataFlavor.stringFlavor));
-        } catch (UnsupportedFlavorException | IOException ignored) {}
+        if (handler != null) {
+            try {
+                handler.send((String) getClipboard().getData(DataFlavor.stringFlavor));
+            } catch (UnsupportedFlavorException | IOException ignored) {}
+        }
     }
 
     /**
@@ -169,13 +188,14 @@ public class Terminal {
      * @param e the KEY_PRESSED KeyEvent to handle
      */
     public void handleKey(KeyEvent e) {
-        char c = e.getKeyChar();
-        if (c != CHAR_UNDEFINED) {
-            //System.out.println(e.paramString() + " -> " + (int) c);
-            handleNormalKey(e);
-        }
-        else {
-            handleSpecialKey(e);
+        if (handler != null) {
+            char c = e.getKeyChar();
+            if (c != CHAR_UNDEFINED) {
+                //System.out.println(e.paramString() + " -> " + (int) c);
+                handleNormalKey(e);
+            } else {
+                handleSpecialKey(e);
+            }
         }
     }
 

@@ -12,6 +12,7 @@ public class Buffer {
     private Cell[][][] buffers;
     private Cursor cursor;
     private Cursor savedCursor;
+    private boolean alternate;
 
     private Point selectionStart, selectionEnd;
 
@@ -70,9 +71,43 @@ public class Buffer {
     }
 
     public void resize(int width, int height) {
+        clearSelection();
+        // TODO: lock buffer during resize
+
+        buffers[0] = _resize(buffers[0], width, height);
+        buffers[1] = _resize(buffers[1], width, height);
+
+        cells = alternate ? buffers[1] : buffers[0];
+
+        scrollBottom += height - this.height;
         this.width = width;
         this.height = height;
-        throw new NotImplementedException();
+    }
+
+    private Cell[][] _resize(Cell[][] buffer, int newwidth, int newheight) {
+        int minw = Math.min(width, newwidth);
+        int minh = Math.min(height, newheight);
+
+        Cell[][] temp = new Cell[newheight][newwidth];
+        for (int y = 0; y < minh; y++) {
+            System.arraycopy(buffer[y], 0, temp[y], 0, minw);
+            if (width < newwidth) {
+                for (int x = width; x < newwidth; x++) {
+                    // TODO: use default colors, not cursor colors
+                    temp[y][x] = new Cell(cursor.background, cursor.foreground);
+                }
+            }
+        }
+        if (height < newheight) {
+            for (int y = height; y < newheight; y++) {
+                for (int x = 0; x < newwidth; x++) {
+                    // TODO: use default colors, not cursor colors
+                    temp[y][x] = new Cell(cursor.background, cursor.foreground);
+                }
+            }
+        }
+
+        return temp;
     }
 
     public void clear() {
@@ -117,11 +152,13 @@ public class Buffer {
 
     public void useAlternate() {
         clearSelection();
+        alternate = true;
         cells = buffers[1];
     }
 
     public void useNormal() {
         clearSelection();
+        alternate = false;
         cells = buffers[0];
     }
 

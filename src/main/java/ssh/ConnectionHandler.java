@@ -71,6 +71,16 @@ public class ConnectionHandler {
         } catch (Exception ignored) {}
     }
 
+    public void resizeShell(int cols, int rows, int width, int height) {
+        if (shell != null) {
+            try {
+                shell.changeWindowDimensions(cols, rows, width, height);
+            } catch (TransportException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     public int receive() throws IOException {
         int x = readCodePoint();
         if (x < 0) {
@@ -113,29 +123,27 @@ public class ConnectionHandler {
     }
 
     public void send(char c) {
-        if (writer == null) {
-            return;
-        }
-        try {
-            logOUT(c);
-            writer.write(c);
-            writer.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (writer != null) {
+            try {
+                logOUT(c);
+                writer.write(c);
+                writer.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
     public void send(String s) {
-        if (writer == null) {
-            return;
-        }
-        try {
-            for (char c : s.toCharArray()) {
-                writer.write(c);
+        if (writer != null) {
+            try {
+                for (char c : s.toCharArray()) {
+                    writer.write(c);
+                }
+                writer.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            writer.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
