@@ -1,6 +1,5 @@
 package terminal;
 
-import com.sun.istack.internal.Nullable;
 import net.schmizz.sshj.userauth.method.AuthMethod;
 import net.schmizz.sshj.userauth.method.AuthPublickey;
 import screen.Buffer;
@@ -42,7 +41,7 @@ public class Terminal {
      *
      * @param frame the JFrame hosting the terminal (used for title and close on EOF)
      */
-    public Terminal(@Nullable JFrame frame) {
+    public Terminal(JFrame frame) {
         this.frame = frame;
         buffer = new Buffer();
         applicationCursorKeys = false;
@@ -79,6 +78,7 @@ public class Terminal {
             new CommandHandler(this).start();
         } catch (IOException e) {
             e.printStackTrace();
+            println(e.toString());
         }
     }
 
@@ -248,6 +248,7 @@ public class Terminal {
      */
     private void print(String s) {
         buffer.getCursor().write(s);
+        buffer.tainted.set(true);
     }
 
     /**
@@ -258,5 +259,6 @@ public class Terminal {
     private void println(String s) {
         print(s);
         buffer.getCursor().CR_LF();
+        buffer.tainted.set(true);
     }
 }

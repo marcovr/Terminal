@@ -7,9 +7,8 @@ import java.awt.event.WindowEvent;
 /**
  * Terminal window
  */
-public class Frame {
+public class Frame extends JFrame {
 
-    private static JFrame frame;
     private JPanel contentPanel;
     private Panel termPanel;
     private final Terminal terminal;
@@ -18,12 +17,14 @@ public class Frame {
      * initialises the terminal window
      */
     private Frame() {
+        super("Terminal");
+        setContentPane(contentPanel);
 
-        terminal = new Terminal(frame);
+        terminal = new Terminal(this);
         termPanel.init(terminal);
 
         // Properly close
-        frame.addWindowListener(new WindowAdapter() {
+        addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
             terminal.disconnect();
@@ -38,8 +39,7 @@ public class Frame {
      * Opens a new Window containing a terminal panel
      */
     public static void launch() {
-        frame = new JFrame("Terminal");
-        frame.setContentPane(new Frame().contentPanel);
+        JFrame frame = new Frame();
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.pack();
         frame.setVisible(true);
