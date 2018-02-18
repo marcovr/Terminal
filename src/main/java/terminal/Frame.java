@@ -16,14 +16,17 @@ public class Frame extends JFrame {
 
     private JPanel contentPanel;
     private Panel termPanel;
-    private final Terminal terminal;
+    private Terminal terminal;
     private boolean maximised;
+
+    private Frame() {
+        super("Terminal");
+    }
 
     /**
      * initialises the terminal window
      */
-    private Frame() {
-        super("Terminal");
+    private void init() {
         setContentPane(contentPanel);
 
         terminal = new Terminal(this);
@@ -67,7 +70,8 @@ public class Frame extends JFrame {
      * Opens a new Window containing a terminal panel
      */
     public static void launch() {
-        JFrame frame = new Frame();
+        Frame frame = new Frame();
+        frame.init();
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.pack();
         frame.setVisible(true);
