@@ -2,13 +2,13 @@ package screen;
 
 import java.awt.*;
 
-public class Cell {
+class Cell {
 
-    public String text;
-    public Color foreground, background;
-    public Font font;
+    String text;
+    Color foreground, background;
+    Font font;
 
-    public Cell(Color background, Color foreground) {
+    Cell(Color background, Color foreground) {
         this.background = background;
         this.foreground = foreground;
     }

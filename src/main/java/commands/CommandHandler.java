@@ -1,6 +1,6 @@
 package commands;
 
-import screen.Buffer;
+import screen.Screen;
 import screen.CellStyle;
 import screen.Cursor;
 import ssh.ConnectionHandler;
@@ -11,7 +11,7 @@ import java.io.IOException;
 
 public class CommandHandler {
 
-    private final Buffer buffer;
+    private final Screen screen;
     private final ConnectionHandler handler;
     private final Terminal terminal;
     private final NumArgAccumulator numArgs;
@@ -23,9 +23,9 @@ public class CommandHandler {
     public CommandHandler(Terminal terminal) {
         this.terminal = terminal;
         handler = terminal.getConnectionHandler();
-        buffer = terminal.getBuffer();
+        screen = terminal.getScreen();
         numArgs = new NumArgAccumulator();
-        cursor = buffer.getCursor();
+        cursor = screen.getCursor();
         qModifier = false;
     }
 
@@ -39,7 +39,7 @@ public class CommandHandler {
         try {
             while (true) {
                 handleChar(handler.receive());
-                buffer.tainted.set(true);
+                terminal.repaint();
             }
         } catch (IOException e) {
             if (e instanceof EOFException) {
@@ -53,7 +53,6 @@ public class CommandHandler {
     private void handleChar(int b) throws IOException {
         switch (b) {
             case 0: // NUL
-                cursor.writeBlank();
                 break;
             case 7: // BEL
                 java.awt.Toolkit.getDefaultToolkit().beep();
@@ -71,7 +70,7 @@ public class CommandHandler {
                 handleESC(handler.receive());
                 break;
             default:
-                cursor.write(b);
+                screen.write(b);
         }
     }
 
@@ -90,14 +89,14 @@ public class CommandHandler {
                 handler.receive(); // ignore
                 break;
             case '7':
-                buffer.saveCursor();
+                screen.saveCursor();
                 break;
             case '8':
-                buffer.restoreCursor();
-                cursor = buffer.getCursor();
+                screen.restoreCursor();
+                cursor = screen.getCursor();
                 break;
             case 'M':
-                buffer.scroll(-1);
+                screen.scroll(-1);
                 break;
             case '=': // NumLock off
             case '>': // NumLock on
@@ -119,7 +118,7 @@ public class CommandHandler {
 
         switch (b) {
             case '@': // Blanks
-                times(n, () -> cursor.writeBlank());
+                times(n, screen::writeBlank);
                 break;
             case 'A':
                 cursor.up(n);
@@ -152,7 +151,7 @@ public class CommandHandler {
                 break;
             case 'I': // Tab stops
                 x = cursor.x / TABSIZE + n * TABSIZE;
-                cursor.x = Math.max(x, buffer.getWidth() - 1);
+                cursor.x = Math.max(x, screen.getWidth() - 1);
                 break;
             case 'J':
                 erase(numArgs.getArgOrDef(0, 0));
@@ -166,13 +165,13 @@ public class CommandHandler {
             case 'M':
                 break;*/
             case 'P':
-                cursor.delete(n);
+                screen.delete(n);
                 break;
             case 'S':
-                buffer.scroll(n);
+                screen.scroll(n);
                 break;
             case 'T':
-                buffer.scroll(-n);
+                screen.scroll(-n);
                 break;
             /*case 'X':
                 break;*/
@@ -195,8 +194,8 @@ public class CommandHandler {
                 } while (!numArgs.isEmpty());
                 break;
             case 'r':
-                buffer.scrollTop = n - 1;
-                buffer.scrollBottom = numArgs.getArgOrDef(1, buffer.getHeight());
+                screen.scrollTop = n - 1;
+                screen.scrollBottom = numArgs.getArgOrDef(1, screen.getHeight());
                 break;
 
             case '?':
@@ -318,7 +317,7 @@ public class CommandHandler {
         if (!qModifier) {
             switch (x) {
                 case 4:
-                    buffer.replaceMode = !is_h;
+                    screen.replaceMode = !is_h;
                     break;
                 default:
                     unsupported("CSI " + x + " " + b);
@@ -331,8 +330,11 @@ public class CommandHandler {
                 break;
             case 4:
                 break;
+            case 5:
+                screen.inverted = is_h;
+                break;
             case 7:
-                buffer.autoWrap = is_h;
+                screen.autoWrap = is_h;
                 break;
             case 12:
                 cursor.blinking = is_h;
@@ -342,24 +344,24 @@ public class CommandHandler {
                 break;
             case 47:
             case 1047:
-                if (is_h) buffer.useAlternate();
-                else buffer.useNormal(); // TODO: clearing it first ???
+                if (is_h) screen.useAlternateBuffer();
+                else screen.useNormalBuffer(); // TODO: clearing it first ???
                 break;
             case 1048:
-                if (is_h) buffer.saveCursor();
-                else buffer.restoreCursor();
-                cursor = buffer.getCursor();
+                if (is_h) screen.saveCursor();
+                else screen.restoreCursor();
+                cursor = screen.getCursor();
                 break;
             case 1049:
                 if (is_h) {
-                    buffer.saveCursor();
-                    buffer.useAlternate();
-                    buffer.clear();
+                    screen.saveCursor();
+                    screen.useAlternateBuffer();
+                    screen.clear();
                 }
                 else {
-                    buffer.useNormal();
-                    buffer.restoreCursor();
-                    cursor = buffer.getCursor();
+                    screen.useNormalBuffer();
+                    screen.restoreCursor();
+                    cursor = screen.getCursor();
                 }
                 break;
             default:
@@ -386,33 +388,33 @@ public class CommandHandler {
     private void erase(int n) {
         switch(n) {
             case 0:
-                for (int i = cursor.y + 1; i < buffer.getHeight(); i++) {
-                    buffer.clearLine(i);
+                for (int i = cursor.y + 1; i < screen.getHeight(); i++) {
+                    screen.clearLine(i);
                 }
                 break;
             case 1:
                 for (int i = 0; i < cursor.y; i++) {
-                    buffer.clearLine(i);
+                    screen.clearLine(i);
                 }
                 break;
             case 2:
-                buffer.clear();
+                screen.clear();
                 break;
             case 3:
                 unsupported("CSI 3J");
                 break;
             case 4:
-                for (int i = cursor.x; i < buffer.getWidth(); i++) {
-                    buffer.clearCell(i, cursor.y);
+                for (int i = cursor.x; i < screen.getWidth(); i++) {
+                    screen.clearCell(i, cursor.y);
                 }
                 break;
             case 5:
                 for (int i = 0; i < cursor.x; i++) {
-                    buffer.clearCell(i, cursor.y);
+                    screen.clearCell(i, cursor.y);
                 }
                 break;
             case 6:
-                buffer.clearLine(cursor.y);
+                screen.clearLine(cursor.y);
                 break;
         }
     }

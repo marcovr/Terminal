@@ -2,8 +2,8 @@ package terminal;
 
 import net.schmizz.sshj.userauth.method.AuthMethod;
 import net.schmizz.sshj.userauth.method.AuthPublickey;
-import screen.Buffer;
 import commands.CommandHandler;
+import screen.Screen;
 import ssh.ConnectionHandler;
 import ssh.CredentialsHandler;
 
@@ -24,7 +24,7 @@ import java.io.IOException;
  */
 public class Terminal {
 
-    private final Buffer buffer;
+    private final Screen screen;
     private final JFrame frame;
     private ConnectionHandler handler;
     private String hostname;
@@ -43,7 +43,7 @@ public class Terminal {
      */
     public Terminal(JFrame frame) {
         this.frame = frame;
-        buffer = new Buffer();
+        screen = new Screen();
         applicationCursorKeys = false;
     }
 
@@ -101,10 +101,10 @@ public class Terminal {
     }
 
     /**
-     * @return the terminal buffer
+     * @return the terminal screen
      */
-    public Buffer getBuffer() {
-        return buffer;
+    public Screen getScreen() {
+        return screen;
     }
 
     /**
@@ -136,15 +136,16 @@ public class Terminal {
     public void resize(int cols, int rows, int width, int height) {
         if (handler != null) {
             handler.resizeShell(cols, rows, width, height);
-            buffer.resize(cols, rows);
+            screen.resize(cols, rows);
         }
+        repaint();
     }
 
     /**
-     * Copies the text from the selected buffer area to the clipboard
+     * Copies the text from the selected screen area to the clipboard
      */
     public void copy() {
-        getClipboard().setContents(new StringSelection(buffer.getSelection()), null);
+        getClipboard().setContents(new StringSelection(screen.getSelection()), null);
     }
 
     /**
@@ -166,20 +167,22 @@ public class Terminal {
     }
 
     /**
-     * Marks the selected area in the buffer
+     * Marks the selected area in the screen
      *
-     * @param start selection start (pixels relative to buffer)
-     * @param end selection end (pixels relative to buffer)
+     * @param start selection start (pixels relative to terminal screen)
+     * @param end selection end (pixels relative to terminal screen)
      */
     public void select(Point start, Point end) {
-        buffer.select(start, end);
+        screen.select(start, end);
+        repaint();
     }
 
     /**
      * Clears selection if any
      */
     public void clearSelection() {
-        buffer.clearSelection();
+        screen.clearSelection();
+        repaint();
     }
 
     /**
@@ -262,23 +265,27 @@ public class Terminal {
     }
 
     /**
-     * Writes text onto the buffer as if received
+     * Writes text onto the screen as if received
      *
      * @param s String to print
      */
     private void print(String s) {
-        buffer.getCursor().write(s);
-        buffer.tainted.set(true);
+        screen.write(s);
+        repaint();
     }
 
     /**
-     * Writes text onto the buffer as if received. Appends a newline
+     * Writes text onto the screen as if received. Appends a newline
      *
      * @param s String to print
      */
     private void println(String s) {
-        print(s);
-        buffer.getCursor().CR_LF();
-        buffer.tainted.set(true);
+        screen.write(s);
+        screen.getCursor().CR_LF();
+        repaint();
+    }
+
+    public void repaint() {
+        frame.repaint();
     }
 }

@@ -1,8 +1,8 @@
 package terminal;
 
-import screen.Buffer;
 import screen.BufferPainter;
 import screen.CellStyle;
+import screen.Screen;
 
 import javax.swing.*;
 import java.awt.*;
@@ -13,11 +13,8 @@ import java.awt.event.*;
  */
 public class Panel extends JPanel {
 
-    private Buffer buffer;
+    private Screen screen;
     private Terminal terminal;
-    private boolean running = true;
-
-    private static final int REFRESH_RATE = 60;
 
     /**
      * Creates a new terminal panel
@@ -35,7 +32,7 @@ public class Panel extends JPanel {
      */
     public void init(Terminal terminal) {
         this.terminal = terminal;
-        buffer = terminal.getBuffer();
+        screen = terminal.getScreen();
 
         // repaint on focus change
         addFocusListener(new FocusListener() {
@@ -62,15 +59,6 @@ public class Panel extends JPanel {
             }
             return false;
         });
-
-        new Thread(this::refreshCheck).start();
-    }
-
-    /**
-     * Stops the refresh thread
-     */
-    public void shutdown() {
-        running = false;
     }
 
     /**
@@ -85,7 +73,7 @@ public class Panel extends JPanel {
     }
 
     /**
-     * Uses {@link BufferPainter} to paint the terminal buffer, or a red square if none available
+     * Uses {@link BufferPainter} to paint the terminal screen, or a red square if none available
      *
      * @param g the graphics object
      */
@@ -93,34 +81,15 @@ public class Panel extends JPanel {
         g.setColor(CellStyle.getBackground());
         g.fillRect(0, 0, getWidth(), getHeight());
 
-        if (buffer == null) {
+        if (screen == null) {
             g.setColor(Color.RED);
             g.fillRect(1, 1, CellStyle.WIDTH, CellStyle.HEIGHT);
         }
         else {
-            BufferPainter.paint(g, buffer, hasFocus());
+            screen.paint(g, hasFocus());
         }
         g.setColor(CellStyle.getBackground());
         g.fillRect(0, 0, 1, getHeight());
-    }
-
-    /**
-     * Tests whether or not the terminal buffer needs to be repainted.
-     */
-    private void refreshCheck() {
-        Thread.currentThread().setName("RefreshChecker");
-        while (running) {
-            try {
-                Thread.sleep(1000 / REFRESH_RATE);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            // if buffer exists and is tainted, repaint
-            if (buffer != null && buffer.tainted.getAndSet(false)) {
-                repaint();
-            }
-        }
     }
 
     /**

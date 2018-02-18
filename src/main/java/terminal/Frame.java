@@ -34,7 +34,6 @@ public class Frame extends JFrame {
             @Override
             public void windowClosing(WindowEvent e) {
                 terminal.disconnect();
-                termPanel.shutdown();
             }
         });
         addWindowStateListener(new WindowAdapter() {

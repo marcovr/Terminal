@@ -6,7 +6,9 @@ import java.awt.*;
 
 public class Cursor {
 
+    private Screen screen;
     private Buffer buffer;
+
     public int x = 0, y = 0;
     public boolean visible = true;
     public boolean blinking = false;
@@ -15,12 +17,13 @@ public class Cursor {
     public Color background = CellStyle.getBackground();
     public int style = CellStyle.REGULAR;
 
-    public Cursor(Buffer buffer) {
+    Cursor(Screen screen, Buffer buffer) {
+        this.screen = screen;
         this.buffer = buffer;
     }
 
-    public Cursor copy() {
-        Cursor c = new Cursor(buffer);
+    Cursor copy() {
+        Cursor c = new Cursor(screen, buffer);
         c.x = x;
         c.y = y;
         c.visible = visible;
@@ -36,7 +39,7 @@ public class Cursor {
     }
 
     public void down(int n) {
-        y = Math.min(y + n, buffer.getHeight());
+        y = Math.min(y + n, buffer.height);
     }
 
     public void left(int n) {
@@ -44,12 +47,12 @@ public class Cursor {
     }
 
     public void right(int n) {
-        x = Math.min(x + n, buffer.getWidth());
+        x = Math.min(x + n, buffer.width);
     }
 
     public void next() {
-        if (x + 1 == buffer.getWidth()) {
-            if (buffer.autoWrap) {
+        if (x + 1 == buffer.width) {
+            if (screen.autoWrap) {
                 x = 0;
                 lineFeed();
             }
@@ -61,11 +64,11 @@ public class Cursor {
 
     public void prev() {
         if (x == 0) {
-            if (buffer.autoWrap) {
-                x = buffer.getWidth() - 1;
+            if (screen.autoWrap) {
+                x = buffer.width - 1;
                 y--;
-                if (y < buffer.scrollTop) {
-                    buffer.scroll(-1);
+                if (y < screen.scrollTop) {
+                    screen.scroll(-1);
                     y++;
                 }
             }
@@ -76,8 +79,8 @@ public class Cursor {
     }
 
     public void lineFeed() {
-        if (y + 1 == buffer.scrollBottom) {
-            buffer.scroll(1);
+        if (y + 1 == screen.scrollBottom) {
+            screen.scroll(1);
         }
         else {
             y++;
@@ -89,28 +92,18 @@ public class Cursor {
         lineFeed();
     }
 
-    public void write(int b) {
-        buffer.clearSelection();
-        _write(b);
-    }
-
-    public void write(String s) {
-        buffer.clearSelection();
+    void write(String s) {
         for (int c : UnicodeHelper.stringToCodePoints(s)) {
-            _write(c);
+            write(c);
         }
     }
 
-    public void writeBlank() {
-        _write(' ');
-    }
-
-    private void _write(int c) {
+    void write(int c) {
         if (writeDiacritic(c)) {
             return;
         }
 
-        Cell cell = buffer.getCell(x, y);
+        Cell cell = buffer.cells[y][x];
         cell.foreground = foreground;
         cell.background = background;
         cell.font = UnicodeHelper.getAppropriateFont(c, CellStyle.getFont(style));
@@ -123,7 +116,7 @@ public class Cursor {
             case Character.NON_SPACING_MARK:
             case Character.COMBINING_SPACING_MARK:
                 prev();
-                Cell cell = buffer.getCell(x, y);
+                Cell cell = buffer.cells[y][x];
                 cell.text += UnicodeHelper.codePointToString(c);
                 next();
                 return true;
@@ -131,13 +124,34 @@ public class Cursor {
         return false;
     }
 
-    public void delete(int n) {
-        buffer.delete(n, x, y);
+    void delete(int n) {
+        Cell[] line = buffer.cells[y];
+        int w = x + n;
+        System.arraycopy(line, w, line, x, buffer.width - 1 - w);
+        for (int i = buffer.width - 1 - w; i < buffer.width; i++) {
+            clearCell(i, y);
+        }
     }
 
     public void invertColors() {
         Color temp = background;
         background = foreground;
         foreground = temp;
+    }
+
+    void clear() {
+        for (int y = 0; y < buffer.height; y++) {
+            clearLine(y);
+        }
+    }
+
+    void clearLine(int y) {
+        for (int x = 0; x < buffer.width; x++) {
+            clearCell(x, y);
+        }
+    }
+
+    void clearCell(int x, int y) {
+        buffer.cells[y][x] = new Cell(background, foreground);
     }
 }

@@ -1,108 +1,59 @@
 package screen;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-
 import java.awt.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-public class Buffer {
+class Buffer {
 
-    private int width, height;
-    private Cell[][] cells;
+    int width, height;
+    Cell[][] cells;
+
     private Cell[][][] buffers;
-    private Cursor cursor;
-    private Cursor savedCursor;
     private boolean alternate;
-
     private Point selectionStart, selectionEnd;
 
-    public int scrollTop, scrollBottom;
-    public boolean autoWrap, replaceMode;
-
-    public AtomicBoolean tainted;
-
-    public Buffer() {
-        this(80, 24);
-    }
-
-    public Buffer(int width, int height) {
+    Buffer(int width, int height) {
         this.width = width;
         this.height = height;
 
-        scrollTop = 0;
-        scrollBottom = height;
-        autoWrap = replaceMode = true;
-
-        tainted = new AtomicBoolean();
-
-        cursor = savedCursor = new Cursor(this);
-
         buffers = new Cell[2][][];
         cells = new Cell[height][width];
-        clear();
+        init();
         buffers[1] = cells;
         cells = new Cell[height][width];
-        clear();
+        init();
         buffers[0] = cells;
     }
 
-    public Cursor getCursor() {
-        return cursor;
-    }
-
-    public Cell getCell(int x, int y) {
-        return cells[y][x];
-    }
-
-    public int getWidth() {
-        return width;
-    }
-
-    public void setWidth(int width) {
-        resize(width, height);
-    }
-
-    public int getHeight() {
-        return height;
-    }
-
-    public void setHeight(int height) {
-        resize(width, height);
-    }
-
-    public void resize(int width, int height) {
-        clearSelection();
-        // TODO: lock buffer during resize
-
+    void resize(int width, int height) {
         buffers[0] = _resize(buffers[0], width, height);
         buffers[1] = _resize(buffers[1], width, height);
 
         cells = alternate ? buffers[1] : buffers[0];
 
-        scrollBottom += height - this.height;
         this.width = width;
         this.height = height;
     }
 
-    private Cell[][] _resize(Cell[][] buffer, int newwidth, int newheight) {
-        int minw = Math.min(width, newwidth);
-        int minh = Math.min(height, newheight);
+    private Cell[][] _resize(Cell[][] buffer, int newWidth, int newHeight) {
+        int minW = Math.min(width, newWidth);
+        int minH = Math.min(height, newHeight);
 
-        Cell[][] temp = new Cell[newheight][newwidth];
-        for (int y = 0; y < minh; y++) {
-            System.arraycopy(buffer[y], 0, temp[y], 0, minw);
-            if (width < newwidth) {
-                for (int x = width; x < newwidth; x++) {
-                    // TODO: use default colors, not cursor colors
-                    temp[y][x] = new Cell(cursor.background, cursor.foreground);
+        Color background = CellStyle.getBackground();
+        Color foreground = CellStyle.getForeground();
+
+        Cell[][] temp = new Cell[newHeight][newWidth];
+        for (int y = 0; y < minH; y++) {
+            System.arraycopy(buffer[y], 0, temp[y], 0, minW);
+            if (width < newWidth) {
+                for (int x = width; x < newWidth; x++) {
+                    temp[y][x] = new Cell(background, foreground);
                 }
             }
         }
-        if (height < newheight) {
-            for (int y = height; y < newheight; y++) {
-                for (int x = 0; x < newwidth; x++) {
-                    // TODO: use default colors, not cursor colors
-                    temp[y][x] = new Cell(cursor.background, cursor.foreground);
+        if (height < newHeight) {
+            for (int y = height; y < newHeight; y++) {
+                for (int x = 0; x < newWidth; x++) {
+                    temp[y][x] = new Cell(background, foreground);
                 }
             }
         }
@@ -110,78 +61,28 @@ public class Buffer {
         return temp;
     }
 
-    public void clear() {
-        clearSelection();
+    private void init() {
+        Color background = CellStyle.getBackground();
+        Color foreground = CellStyle.getForeground();
+
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                cells[y][x] = new Cell(cursor.background, cursor.foreground);
+                cells[y][x] = new Cell(background, foreground);
             }
         }
     }
 
-    public void clearLine(int y) {
-        clearSelection();
-        for (int x = 0; x < width; x++) {
-            cells[y][x] = new Cell(cursor.background, cursor.foreground);
-        }
-    }
-
-    public void clearCell(int x, int y) {
-        clearSelection();
-        cells[y][x] = new Cell(cursor.background, cursor.foreground);
-    }
-
-    public void scroll(int d) {
-        clearSelection();
-        if (d > 0) {
-            System.arraycopy(cells, scrollTop + d, cells, scrollTop, scrollBottom - d);
-            for (int i = scrollBottom - d; i < scrollBottom; i++) {
-                cells[i] = new Cell[width];
-                clearLine(i);
-            }
-        }
-        else {
-            d = -d;
-            System.arraycopy(cells, scrollTop, cells, scrollTop + d, scrollBottom - d);
-            for (int i = scrollTop; i < scrollTop + d; i++) {
-                cells[i] = new Cell[width];
-                clearLine(i);
-            }
-        }
-    }
-
-    public void useAlternate() {
-        clearSelection();
+    void useAlternate() {
         alternate = true;
         cells = buffers[1];
     }
 
-    public void useNormal() {
-        clearSelection();
+    void useNormal() {
         alternate = false;
         cells = buffers[0];
     }
 
-    public void saveCursor() {
-        savedCursor = cursor.copy();
-    }
-
-    public void restoreCursor() {
-        cursor = savedCursor;
-    }
-
-    public void delete(int n, int x, int y) {
-        clearSelection();
-
-        Cell[] line = cells[y];
-        int w = x + n;
-        System.arraycopy(line, w, line, x, width - 1 - w);
-        for (int i = width - 1 - w; i < width; i++) {
-            cells[y][i] = new Cell(cursor.background, cursor.foreground);
-        }
-    }
-
-    public String getSelection() {
+    String getSelection() {
         if (selectionStart == null) {
             return "";
         }
@@ -208,12 +109,7 @@ public class Buffer {
         return sb.toString();
     }
 
-    public void select(Point start, Point end) {
-        clearSelection();
-
-        start = pixelToCell(start);
-        end = pixelToCell(end);
-
+    void select(Point start, Point end) {
         if (start.y < end.y || start.y == end.y && start.x < end.x) {
             selectionStart = start;
             selectionEnd = end;
@@ -224,20 +120,12 @@ public class Buffer {
         }
 
         markSelection();
-        tainted.set(true);
     }
 
-    private Point pixelToCell(Point p) {
-        p.x = Math.min(Math.max(p.x / CellStyle.WIDTH, 0), width - 1);
-        p.y = Math.min(Math.max(p.y / CellStyle.HEIGHT, 0), height - 1);
-        return p;
-    }
-
-    public void clearSelection() {
+    void clearSelection() {
         if (selectionStart != null) {
             markSelection();
             selectionStart = null;
-            tainted.set(true);
         }
     }
 
