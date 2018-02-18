@@ -1,6 +1,5 @@
 package terminal;
 
-import screen.BufferPainter;
 import screen.CellStyle;
 import screen.Screen;
 
@@ -73,7 +72,7 @@ public class Panel extends JPanel {
     }
 
     /**
-     * Uses {@link BufferPainter} to paint the terminal screen, or a red square if none available
+     * Paint the terminal screen, or a red square if none available
      *
      * @param g the graphics object
      */
