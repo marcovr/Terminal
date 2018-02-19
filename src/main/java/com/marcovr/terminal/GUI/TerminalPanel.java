@@ -1,5 +1,6 @@
-package com.marcovr.terminal;
+package com.marcovr.terminal.GUI;
 
+import com.marcovr.terminal.Terminal;
 import com.marcovr.terminal.screen.CellStyle;
 import com.marcovr.terminal.screen.Screen;
 
@@ -10,28 +11,23 @@ import java.awt.event.*;
 /**
  * Terminal panel derived from JPanel
  */
-public class Panel extends JPanel {
+class TerminalPanel extends JPanel {
 
     private Screen screen;
     private Terminal terminal;
 
     /**
      * Creates a new terminal panel
-     */
-    public Panel() {
-        setPreferredSize(new Dimension(642, 386));
-        setFocusable(true);
-        setCursor(new Cursor(Cursor.TEXT_CURSOR));
-    }
-
-    /**
-     * Initialises the terminal panel and starts a thread checking for refreshes.
      *
      * @param terminal the terminal to interact with
      */
-    public void init(Terminal terminal) {
+    TerminalPanel(Terminal terminal) {
         this.terminal = terminal;
         screen = terminal.getScreen();
+
+        setPreferredSize(new Dimension(642, 386));
+        setFocusable(true);
+        setCursor(new Cursor(Cursor.TEXT_CURSOR));
 
         // repaint on focus change
         addFocusListener(new FocusListener() {

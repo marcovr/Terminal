@@ -1,11 +1,13 @@
 package com.marcovr.terminal;
 
-import net.schmizz.sshj.userauth.method.AuthMethod;
-import net.schmizz.sshj.userauth.method.AuthPublickey;
+import com.marcovr.terminal.GUI.TerminalFrame;
 import com.marcovr.terminal.commands.CommandHandler;
+import com.marcovr.terminal.misc.KeyTranslator;
 import com.marcovr.terminal.screen.Screen;
 import com.marcovr.terminal.ssh.ConnectionHandler;
 import com.marcovr.terminal.ssh.CredentialsHandler;
+import net.schmizz.sshj.userauth.method.AuthMethod;
+import net.schmizz.sshj.userauth.method.AuthPublickey;
 
 import javax.swing.*;
 import java.awt.*;
@@ -14,8 +16,6 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.KeyEvent;
-import static java.awt.event.KeyEvent.*;
-
 import java.awt.event.WindowEvent;
 import java.io.IOException;
 
@@ -25,26 +25,23 @@ import java.io.IOException;
 public class Terminal {
 
     private final Screen screen;
-    private final JFrame frame;
+    private final TerminalFrame frame;
+    private final KeyTranslator keys;
     private ConnectionHandler handler;
     private String hostname;
     private String username;
 
     /**
-     * True: transmit application cursor escape codes
-     * False: transmit normal cursor escape codes
-     */
-    public boolean applicationCursorKeys;
-
-    /**
      * Creates a new terminal
-     *
-     * @param frame the JFrame hosting the terminal (used for title and close on EOF)
      */
-    public Terminal(JFrame frame) {
-        this.frame = frame;
+    public Terminal() {
         screen = new Screen();
-        applicationCursorKeys = false;
+        frame = new TerminalFrame(this);
+        keys = new KeyTranslator();
+
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        frame.pack();
+        frame.setVisible(true);
     }
 
     /**
@@ -95,9 +92,7 @@ public class Terminal {
      * Sends a close event to the corresponding JFrame
      */
     public void shutdown() {
-        if (frame != null) {
-            frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
-        }
+        frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
     }
 
     /**
@@ -114,15 +109,17 @@ public class Terminal {
         return handler;
     }
 
+    public void setApplicationCursorKeys(boolean status) {
+        keys.applicationCursorKeys = status;
+    }
+
     /**
      * Sets the title of the corresponding JFrame
      *
      * @param title the title String
      */
     public void setTitle(String title) {
-        if (frame != null) {
-            frame.setTitle(title);
-        }
+        frame.setTitle(title);
     }
 
     /**
@@ -192,76 +189,11 @@ public class Terminal {
      */
     public void handleKey(KeyEvent e) {
         if (handler != null) {
-            char c = e.getKeyChar();
-            if (c != CHAR_UNDEFINED) {
-                //System.out.println(e.paramString() + " -> " + (int) c);
-                handleNormalKey(e);
-            } else {
-                handleSpecialKey(e);
+            String keyPress = keys.translateKey(e);
+            if (keyPress != null) {
+                handler.send(keyPress);
             }
         }
-    }
-
-    /**
-     * Replaces normal key if necessary, then uses it as input
-     *
-     * @param e the KEY_PRESSED KeyEvent
-     */
-    private void handleNormalKey(KeyEvent e) {
-        char c = e.getKeyChar();
-        switch (c) {
-            case VK_DELETE:
-                handler.send("\033[3~");
-                break;
-            case VK_ENTER:
-                handler.send('\r');
-                break;
-            default:
-                handler.send(c);
-        }
-    }
-
-    /**
-     * Checks special keys and uses defined replacements as input
-     *
-     * @param e the KEY_PRESSED KeyEvent
-     */
-    private void handleSpecialKey(KeyEvent e) {
-        switch (e.getKeyCode()) {
-            case VK_UP:
-                sendCursorCMD('A');
-                break;
-            case VK_DOWN:
-                sendCursorCMD('B');
-                break;
-            case VK_RIGHT:
-                sendCursorCMD('C');
-                break;
-            case VK_LEFT:
-                sendCursorCMD('D');
-                break;
-            case VK_HOME:
-                sendCursorCMD('H');
-                break;
-            case VK_END:
-                sendCursorCMD('F');
-                break;
-            case VK_PAGE_UP:
-                handler.send("\033[5~");
-                break;
-            case VK_PAGE_DOWN:
-                handler.send("\033[6~");
-                break;
-        }
-    }
-
-    /**
-     * Creates correct cursor escape command and uses it as input
-     *
-     * @param dir cursor direction ('A' to 'F')
-     */
-    private void sendCursorCMD(char dir) {
-        handler.send((applicationCursorKeys ? "\033O" : "\033[") + dir);
     }
 
     /**
@@ -285,6 +217,9 @@ public class Terminal {
         repaint();
     }
 
+    /**
+     * Repaints the terminal window
+     */
     public void repaint() {
         frame.repaint();
     }

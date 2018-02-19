@@ -326,7 +326,7 @@ public class CommandHandler {
         }
         switch (x) {
             case 1:
-                terminal.applicationCursorKeys = is_h;
+                terminal.setApplicationCursorKeys(is_h);
                 break;
             case 4:
                 break;

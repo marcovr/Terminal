@@ -1,5 +1,6 @@
-package com.marcovr.terminal;
+package com.marcovr.terminal.GUI;
 
+import com.marcovr.terminal.Terminal;
 import com.marcovr.terminal.screen.CellStyle;
 
 import javax.swing.*;
@@ -12,25 +13,18 @@ import java.awt.event.WindowEvent;
 /**
  * Terminal window
  */
-public class Frame extends JFrame {
+public class TerminalFrame extends JFrame {
 
-    private JPanel contentPanel;
-    private Panel termPanel;
-    private Terminal terminal;
     //private boolean maximised;
 
-    private Frame() {
-        super("Terminal");
-    }
-
     /**
-     * initialises the terminal window
+     * creates the terminal window
      */
-    private void init() {
-        setContentPane(contentPanel);
+    public TerminalFrame(Terminal terminal) {
+        super("Terminal");
 
-        terminal = new Terminal(this);
-        termPanel.init(terminal);
+        TerminalPanel terminalPanel = new TerminalPanel(terminal);
+        setContentPane(terminalPanel);
 
         // Properly close
         addWindowListener(new WindowAdapter() {
@@ -48,7 +42,7 @@ public class Frame extends JFrame {
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
-                Dimension size = termPanel.getSize();
+                Dimension size = terminalPanel.getSize();
                 int x = size.width / CellStyle.WIDTH;
                 int y = size.height / CellStyle.HEIGHT;
                 int width = CellStyle.WIDTH * x + 2;
@@ -56,25 +50,12 @@ public class Frame extends JFrame {
 
                 /*if (!maximised) {
                     size.setSize(width, height);
-                    termPanel.setPreferredSize(size);
+                    terminalPanel.setPreferredSize(size);
                     pack();
                 }*/
                 terminal.resize(x, y, width, height);
             }
         });
-
-        terminal.connect("ras.pi"); // TODO: make changeable
-    }
-
-    /**
-     * Opens a new Window containing a terminal panel
-     */
-    public static void launch() {
-        Frame frame = new Frame();
-        frame.init();
-        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        frame.pack();
-        frame.setVisible(true);
     }
 
 }

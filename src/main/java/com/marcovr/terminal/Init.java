@@ -1,7 +1,6 @@
 package com.marcovr.terminal;
 
 import com.marcovr.terminal.ssh.CredentialsHandler;
-import com.marcovr.terminal.Frame;
 
 public class Init {
 
@@ -12,7 +11,7 @@ public class Init {
      */
     public static void main(String[] args) {
         CredentialsHandler.loadKey("C:\\Tools\\Putty Data\\private key.ppk");
-        Frame.launch();
+        new Terminal().connect("ras.pi");
     }
 
 }
