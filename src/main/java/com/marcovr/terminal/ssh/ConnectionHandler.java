@@ -27,14 +27,11 @@ public class ConnectionHandler {
     private InputStreamReader reader;
     private Session.Shell shell;
 
-    private int pushbackChar = -2;
-
     public void connect(String hostname) throws IOException {
         ssh = new SSHClient();
         //ssh.useCompression();
 
         //ssh.loadKnownHosts();
-        //ssh.addHostKeyVerifier("19:35:99:92:9e:40:0c:5a:b5:34:00:77:91:41:14:94");
         ssh.addHostKeyVerifier(new PromiscuousVerifier());
 
         ssh.connect(hostname);
@@ -58,7 +55,7 @@ public class ConnectionHandler {
 
         OutputStream outputStream = shell.getOutputStream();
         InputStream inputStream = shell.getInputStream();
-        reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
+        reader = new UnicodeHelper.UnicodeStreamReader(inputStream);
         writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
     }
 
@@ -82,44 +79,12 @@ public class ConnectionHandler {
     }
 
     public int receive() throws IOException {
-        int x = readCodePoint();
+        int x = reader.read();
         if (x < 0) {
             throw new EOFException();
         }
         logIN(x);
         return x;
-    }
-
-    private int readCodePoint() throws IOException {
-        int c1;
-
-        if (pushbackChar == -2) {
-            c1 = reader.read();
-        }
-        else {
-            c1 = pushbackChar;
-            pushbackChar = -2;
-        }
-
-        if (c1 == -1 || !Character.isSurrogate((char) c1)) {
-            return c1; // c1 is an easy non-surrogate character. We're done.
-        }
-
-        if (Character.isLowSurrogate((char) c1)) {
-            // c1 is a low surrogate but we need a high one.
-            return '\ufffd'; // (That's the replacement character.)
-        }
-
-        // We have a high-surrogate. Hopefully next is a low surrogate.
-        int c2 = reader.read();
-        if (c2 == -1 || !Character.isLowSurrogate((char) c2)) {
-            // Didn't get what we want. Push it back.
-            pushbackChar = c2;
-            return '\ufffd'; // (That's the replacement character again.)
-        }
-
-        // c1 and c2 form a surrogate pair. Join 'em.
-        return Character.toCodePoint((char) c1, (char) c2);
     }
 
     public void send(char c) {
