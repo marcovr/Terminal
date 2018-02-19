@@ -29,6 +29,7 @@ public class Terminal {
     private final KeyTranslator keys;
     private ConnectionHandler handler;
     private String hostname;
+    private int port;
     private String username;
 
     /**
@@ -48,9 +49,11 @@ public class Terminal {
      * Starts a connection in a new thread
      *
      * @param hostname the host to connect to
+     * @param port the port to connect to
      */
-    public void connect(String hostname) {
+    public void connect(String hostname, int port) {
         this.hostname = hostname;
+        this.port = port;
         username = "pi"; // TODO: make changeable
         frame.setTitle(hostname + " - Terminal");
         new Thread(this::_connect).start();
@@ -64,7 +67,7 @@ public class Terminal {
 
         handler = new ConnectionHandler();
         try {
-            handler.connect(hostname);
+            handler.connect(hostname, port);
 
             println("Using username \"" + username + "\".");
             AuthMethod auth = new AuthPublickey(CredentialsHandler.getKey());

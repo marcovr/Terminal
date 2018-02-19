@@ -11,7 +11,7 @@ public class Init {
      */
     public static void main(String[] args) {
         CredentialsHandler.loadKey("C:\\Tools\\Putty Data\\private key.ppk");
-        new Terminal().connect("ras.pi");
+        new Terminal().connect("ras.pi", 22);
     }
 
 }

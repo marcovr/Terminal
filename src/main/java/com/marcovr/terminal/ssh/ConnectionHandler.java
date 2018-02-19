@@ -27,14 +27,14 @@ public class ConnectionHandler {
     private InputStreamReader reader;
     private Session.Shell shell;
 
-    public void connect(String hostname) throws IOException {
+    public void connect(String hostname, int port) throws IOException {
         ssh = new SSHClient();
         //ssh.useCompression();
 
         //ssh.loadKnownHosts();
         ssh.addHostKeyVerifier(new PromiscuousVerifier());
 
-        ssh.connect(hostname);
+        ssh.connect(hostname, port);
     }
 
     public void authenticate(String username, AuthMethod auth) throws UserAuthException, TransportException {
