@@ -86,9 +86,12 @@ public class Screen {
         }
     }
 
-    public synchronized void useAlternateBuffer() {
+    public synchronized void useAlternateBuffer(boolean clean) {
         buffer.clearSelection();
         buffer.useAlternate();
+        if (clean) {
+            cursor.clear();
+        }
     }
 
     public synchronized void useNormalBuffer() {

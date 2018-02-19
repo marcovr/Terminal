@@ -14,17 +14,17 @@ public class CommandHandler {
     private final Screen screen;
     private final ConnectionHandler handler;
     private final Terminal terminal;
-    private final NumArgAccumulator numArgs;
+    private final NumArgRetriever numArgs;
     private Cursor cursor;
     private boolean qModifier;
 
-    private int TABSIZE = 8; // TODO: make changeable
+    private static final int TAB_SIZE = 8;
 
     public CommandHandler(Terminal terminal) {
         this.terminal = terminal;
         handler = terminal.getConnectionHandler();
         screen = terminal.getScreen();
-        numArgs = new NumArgAccumulator();
+        numArgs = new NumArgRetriever(handler);
         cursor = screen.getCursor();
         qModifier = false;
     }
@@ -33,6 +33,7 @@ public class CommandHandler {
         new Thread(this::readLoop).start();
     }
 
+    @SuppressWarnings("InfiniteLoopStatement")
     private void readLoop() {
         Thread.currentThread().setName("CommandHandler");
 
@@ -107,12 +108,7 @@ public class CommandHandler {
     }
 
     private void processCSI() throws IOException {
-        int b;
-        numArgs.start();
-        do {
-            b = handler.receive();
-        } while (numArgs.accumulate(b));
-
+        int b = numArgs.retrieve();
         int n = numArgs.getArgOrDef(0, 1);
         int x;
 
@@ -150,7 +146,7 @@ public class CommandHandler {
                 cursor.y = n - 1;
                 break;
             case 'I': // Tab stops
-                x = cursor.x / TABSIZE + n * TABSIZE;
+                x = cursor.x / TAB_SIZE + n * TAB_SIZE;
                 cursor.x = Math.max(x, screen.getWidth() - 1);
                 break;
             case 'J':
@@ -176,7 +172,7 @@ public class CommandHandler {
             /*case 'X':
                 break;*/
             case 'Z':
-                x = (cursor.x - 1) / TABSIZE - (n - 1) * TABSIZE;
+                x = (cursor.x - 1) / TAB_SIZE - (n - 1) * TAB_SIZE;
                 cursor.x = Math.min(x, 0);
                 break;
             case 'd':
@@ -186,12 +182,12 @@ public class CommandHandler {
             case 'l':
                 do {
                     processCSIhl((char)b, numArgs.consumeArgOrDef(-1));
-                } while (!numArgs.isEmpty());
+                } while (numArgs.hasArguments());
                 break;
             case 'm': // SGR
                 do {
                     applySGRArg(numArgs.consumeArgOrDef(0));
-                } while (!numArgs.isEmpty());
+                } while (numArgs.hasArguments());
                 break;
             case 'r':
                 screen.scrollTop = n - 1;
@@ -269,7 +265,7 @@ public class CommandHandler {
                     cursor.invertColors();
                     break;
                 /*case 8:
-                    cursor.foreground = cursor.background;
+                    // conceal
                     break;*/
                 case 21:
                 case 22:
@@ -286,7 +282,7 @@ public class CommandHandler {
                     cursor.invertColors();
                     break;
                 /*case 28:
-                    // hmmm
+                    // reveal
                     break;*/
             }
         }
@@ -351,9 +347,12 @@ public class CommandHandler {
                 cursor.visible = is_h;
                 break;
             case 47:
+                if (is_h) screen.useAlternateBuffer(false);
+                else screen.useNormalBuffer();
+                break;
             case 1047:
-                if (is_h) screen.useAlternateBuffer();
-                else screen.useNormalBuffer(); // TODO: clearing it first ???
+                if (is_h) screen.useAlternateBuffer(true);
+                else screen.useNormalBuffer();
                 break;
             case 1048:
                 if (is_h) screen.saveCursor();
@@ -363,8 +362,7 @@ public class CommandHandler {
             case 1049:
                 if (is_h) {
                     screen.saveCursor();
-                    screen.useAlternateBuffer();
-                    screen.clear();
+                    screen.useAlternateBuffer(true);
                 }
                 else {
                     screen.useNormalBuffer();
