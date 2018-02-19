@@ -1,10 +1,10 @@
-package commands;
+package com.marcovr.terminal.commands;
 
-import screen.Screen;
-import screen.CellStyle;
-import screen.Cursor;
-import ssh.ConnectionHandler;
-import terminal.Terminal;
+import com.marcovr.terminal.screen.Screen;
+import com.marcovr.terminal.screen.CellStyle;
+import com.marcovr.terminal.screen.Cursor;
+import com.marcovr.terminal.ssh.ConnectionHandler;
+import com.marcovr.terminal.Terminal;
 
 import java.io.EOFException;
 import java.io.IOException;

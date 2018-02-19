@@ -1,6 +1,6 @@
-package terminal;
+package com.marcovr.terminal;
 
-import screen.CellStyle;
+import com.marcovr.terminal.screen.CellStyle;
 
 import javax.swing.*;
 import java.awt.*;

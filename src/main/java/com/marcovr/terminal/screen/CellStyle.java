@@ -1,4 +1,4 @@
-package screen;
+package com.marcovr.terminal.screen;
 
 import java.awt.*;
 import java.awt.font.TextAttribute;

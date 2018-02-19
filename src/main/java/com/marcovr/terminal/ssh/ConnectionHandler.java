@@ -1,6 +1,6 @@
-package ssh;
+package com.marcovr.terminal.ssh;
 
-import misc.UnicodeHelper;
+import com.marcovr.terminal.misc.UnicodeHelper;
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.common.LoggerFactory;
 import net.schmizz.sshj.common.StreamCopier;

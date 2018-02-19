@@ -1,5 +1,7 @@
-import ssh.CredentialsHandler;
-import terminal.Frame;
+package com.marcovr.terminal;
+
+import com.marcovr.terminal.ssh.CredentialsHandler;
+import com.marcovr.terminal.Frame;
 
 public class Init {
 

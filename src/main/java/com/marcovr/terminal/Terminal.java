@@ -1,11 +1,11 @@
-package terminal;
+package com.marcovr.terminal;
 
 import net.schmizz.sshj.userauth.method.AuthMethod;
 import net.schmizz.sshj.userauth.method.AuthPublickey;
-import commands.CommandHandler;
-import screen.Screen;
-import ssh.ConnectionHandler;
-import ssh.CredentialsHandler;
+import com.marcovr.terminal.commands.CommandHandler;
+import com.marcovr.terminal.screen.Screen;
+import com.marcovr.terminal.ssh.ConnectionHandler;
+import com.marcovr.terminal.ssh.CredentialsHandler;
 
 import javax.swing.*;
 import java.awt.*;

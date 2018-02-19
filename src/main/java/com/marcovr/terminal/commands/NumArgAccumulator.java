@@ -1,4 +1,4 @@
-package commands;
+package com.marcovr.terminal.commands;
 
 import java.util.Iterator;
 import java.util.LinkedList;

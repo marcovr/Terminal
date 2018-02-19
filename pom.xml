@@ -45,7 +45,7 @@
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>libs/</classpathPrefix>
                             <mainClass>
-                                Init
+                                com.marcovr.terminal.Init
                             </mainClass>
                         </manifest>
                     </archive>

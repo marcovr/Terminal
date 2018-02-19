@@ -1,6 +1,6 @@
-package screen;
+package com.marcovr.terminal.screen;
 
-import misc.UnicodeHelper;
+import com.marcovr.terminal.misc.UnicodeHelper;
 
 import java.awt.*;
 

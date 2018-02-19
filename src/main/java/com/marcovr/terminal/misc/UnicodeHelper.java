@@ -1,4 +1,4 @@
-package misc;
+package com.marcovr.terminal.misc;
 
 import java.awt.*;
 import java.util.ArrayList;
