@@ -332,6 +332,14 @@ public class CommandHandler {
                 break;
             case 5:
                 screen.inverted = is_h;
+                /*if (is_h) {
+                    terminal.repaint();
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }*/
                 break;
             case 7:
                 screen.autoWrap = is_h;

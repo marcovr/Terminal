@@ -17,7 +17,7 @@ public class Frame extends JFrame {
     private JPanel contentPanel;
     private Panel termPanel;
     private Terminal terminal;
-    private boolean maximised;
+    //private boolean maximised;
 
     private Frame() {
         super("Terminal");
@@ -39,12 +39,12 @@ public class Frame extends JFrame {
                 terminal.disconnect();
             }
         });
-        addWindowStateListener(new WindowAdapter() {
+        /*addWindowStateListener(new WindowAdapter() {
             @Override
             public void windowStateChanged(WindowEvent e) {
                 maximised = (e.getNewState() & Frame.MAXIMIZED_BOTH) == Frame.MAXIMIZED_BOTH;
             }
-        });
+        });*/
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
