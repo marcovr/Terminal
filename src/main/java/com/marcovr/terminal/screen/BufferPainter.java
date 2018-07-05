@@ -82,8 +82,8 @@ class BufferPainter {
 
     private static void paintCursor(Graphics2D g, Buffer b, Cursor cursor, boolean hasFocus) {
         if (cursor.visible) {
-            int x = cursor.x;
-            int y = cursor.y;
+            int x = cursor.getX();
+            int y = cursor.getY();
 
             g.setColor(Color.GREEN);
             if (hasFocus) {

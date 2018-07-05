@@ -8,8 +8,10 @@ public class Cursor {
 
     private Screen screen;
     private Buffer buffer;
+    private int x = 0, y = 0;
 
-    public int x = 0, y = 0;
+    private boolean wrapDue = false;
+
     public boolean visible = true;
     public boolean blinking = false;
 
@@ -26,12 +28,30 @@ public class Cursor {
         Cursor c = new Cursor(screen, buffer);
         c.x = x;
         c.y = y;
+        c.wrapDue = wrapDue;
         c.visible = visible;
         c.blinking = blinking;
         c.foreground = foreground;
         c.background = background;
         c.style = style;
         return c;
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public void setX(int x) {
+        this.x = x;
+        wrapDue = false;
+    }
+
+    public int getY() {
+        return y;
+    }
+
+    public void setY(int y) {
+        this.y = y;
     }
 
     public void up(int n) {
@@ -44,26 +64,27 @@ public class Cursor {
 
     public void left(int n) {
         x = Math.max(x - n, 0);
+        wrapDue = false;
     }
 
     public void right(int n) {
         x = Math.min(x + n, buffer.width);
+        wrapDue = false;
     }
 
     public void next() {
         if (x + 1 == buffer.width) {
-            if (screen.autoWrap) {
-                x = 0;
-                lineFeed();
-            }
+            wrapDue = screen.autoWrap;
         }
         else {
             x++;
+            wrapDue = false;
         }
     }
 
     public void prev() {
         if (x == 0) {
+            wrapDue = screen.autoWrap;
             if (screen.autoWrap) {
                 x = buffer.width - 1;
                 y--;
@@ -75,7 +96,13 @@ public class Cursor {
         }
         else {
             x--;
+            wrapDue = false;
         }
+    }
+
+    public void carriageReturn() {
+        x = 0;
+        wrapDue = false;
     }
 
     public void lineFeed() {
@@ -88,7 +115,7 @@ public class Cursor {
     }
 
     public void CR_LF() {
-        x = 0;
+        carriageReturn();
         lineFeed();
     }
 
@@ -99,6 +126,10 @@ public class Cursor {
     }
 
     void write(int c) {
+        if (wrapDue && screen.autoWrap) {
+            CR_LF();
+        }
+
         if (writeDiacritic(c)) {
             return;
         }
@@ -125,6 +156,7 @@ public class Cursor {
     }
 
     void delete(int n) {
+        wrapDue = false;
         Cell[] line = buffer.cells[y];
         int w = x + n;
         System.arraycopy(line, w, line, x, buffer.width - 1 - w);

@@ -37,14 +37,14 @@ public class Screen {
     public synchronized void resize(int width, int height) {
         if (width != buffer.width || height != buffer.height) {
             buffer.clearSelection();
-            if (cursor.y >= height) {
-                _scroll(cursor.y - (height - 1));
+            if (cursor.getY() >= height) {
+                _scroll(cursor.getY() - (height - 1));
             }
 
             scrollBottom += height - buffer.height;
             buffer.resize(width, height);
-            cursor.x = Math.min(cursor.x, width - 1);
-            cursor.y = Math.min(cursor.y, height - 1);
+            cursor.setX(Math.min(cursor.getX(), width - 1));
+            cursor.setY(Math.min(cursor.getY(), height - 1));
         }
     }
 

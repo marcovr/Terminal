@@ -65,7 +65,7 @@ public class CommandHandler {
                 cursor.lineFeed();
                 break;
             case 13: // CR
-                cursor.x = 0;
+                cursor.carriageReturn();
                 break;
             case 27: // ESC
                 handleESC(handler.receive());
@@ -130,24 +130,24 @@ public class CommandHandler {
                 break;
             case 'E':
                 cursor.down(n);
-                cursor.x = 0;
+                cursor.carriageReturn();
                 break;
             case 'F':
                 cursor.up(n);
-                cursor.x = 0;
+                cursor.carriageReturn();
                 break;
             case '`':
             case 'G':
-                cursor.x = n - 1;
+                cursor.setX(n - 1);
                 break;
             case 'f':
             case 'H':
-                cursor.x = numArgs.getArgOrDef(1, 1) - 1;
-                cursor.y = n - 1;
+                cursor.setX(numArgs.getArgOrDef(1, 1) - 1);
+                cursor.setY(n - 1);
                 break;
             case 'I': // Tab stops
-                x = cursor.x / TAB_SIZE + n * TAB_SIZE;
-                cursor.x = Math.max(x, screen.getWidth() - 1);
+                x = cursor.getX() / TAB_SIZE + n * TAB_SIZE;
+                cursor.setX(Math.max(x, screen.getWidth() - 1));
                 break;
             case 'J':
                 erase(numArgs.getArgOrDef(0, 0));
@@ -172,11 +172,11 @@ public class CommandHandler {
             /*case 'X':
                 break;*/
             case 'Z':
-                x = (cursor.x - 1) / TAB_SIZE - (n - 1) * TAB_SIZE;
-                cursor.x = Math.min(x, 0);
+                x = (cursor.getX() - 1) / TAB_SIZE - (n - 1) * TAB_SIZE;
+                cursor.setX(Math.min(x, 0));
                 break;
             case 'd':
-                cursor.y = n - 1;
+                cursor.setY(n - 1);
                 break;
             case 'h':
             case 'l':
@@ -394,12 +394,12 @@ public class CommandHandler {
     private void erase(int n) {
         switch(n) {
             case 0:
-                for (int i = cursor.y + 1; i < screen.getHeight(); i++) {
+                for (int i = cursor.getY() + 1; i < screen.getHeight(); i++) {
                     screen.clearLine(i);
                 }
                 break;
             case 1:
-                for (int i = 0; i < cursor.y; i++) {
+                for (int i = 0; i < cursor.getY(); i++) {
                     screen.clearLine(i);
                 }
                 break;
@@ -410,17 +410,17 @@ public class CommandHandler {
                 unsupported("CSI 3J");
                 break;
             case 4:
-                for (int i = cursor.x; i < screen.getWidth(); i++) {
-                    screen.clearCell(i, cursor.y);
+                for (int i = cursor.getX(); i < screen.getWidth(); i++) {
+                    screen.clearCell(i, cursor.getY());
                 }
                 break;
             case 5:
-                for (int i = 0; i < cursor.x; i++) {
-                    screen.clearCell(i, cursor.y);
+                for (int i = 0; i < cursor.getX(); i++) {
+                    screen.clearCell(i, cursor.getY());
                 }
                 break;
             case 6:
-                screen.clearLine(cursor.y);
+                screen.clearLine(cursor.getY());
                 break;
         }
     }
