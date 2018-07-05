@@ -246,8 +246,8 @@ public class CommandHandler {
         if (x < 30) {
             switch(x) {
                 case 0:
-                    cursor.foreground = CellStyle.getForeground();
-                    cursor.background = CellStyle.getBackground();
+                    cursor.setForeground(CellStyle.getForeground());
+                    cursor.setBackground(CellStyle.getBackground());
                     cursor.style = CellStyle.REGULAR;
                     break;
                 case 1:
@@ -262,7 +262,7 @@ public class CommandHandler {
                     cursor.style = cursor.style | CellStyle.UNDERLINE;
                     break;
                 case 7:
-                    cursor.invertColors();
+                    cursor.setInverted(true);
                     break;
                 /*case 8:
                     // conceal
@@ -279,7 +279,7 @@ public class CommandHandler {
                     cursor.style = cursor.style & ~CellStyle.UNDERLINE;
                     break;
                 case 27:
-                    cursor.invertColors();
+                    cursor.setInverted(false);
                     break;
                 /*case 28:
                     // reveal
@@ -288,19 +288,19 @@ public class CommandHandler {
         }
         else if (x < 40) {
             x -= 30;
-            cursor.foreground = CellStyle.getForeground(x);
+            cursor.setForeground(CellStyle.getForeground(x));
         }
         else if (x < 50) {
             x -= 40;
-            cursor.background = CellStyle.getBackground(x);
+            cursor.setBackground(CellStyle.getBackground(x));
         }
         else if (x >= 90 && x <= 97) {
             x -= 80;
-            cursor.foreground = CellStyle.getForeground(x);
+            cursor.setForeground(CellStyle.getForeground(x));
         }
         else if (x >= 100 && x <= 107) {
             x -= 90;
-            cursor.background = CellStyle.getBackground(x);
+            cursor.setBackground(CellStyle.getBackground(x));
         }
         else {
             unsupported("SGR " + x);

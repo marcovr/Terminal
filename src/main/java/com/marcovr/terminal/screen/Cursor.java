@@ -11,12 +11,13 @@ public class Cursor {
     private int x = 0, y = 0;
 
     private boolean wrapDue = false;
+    private boolean inverted = false;
 
     public boolean visible = true;
     public boolean blinking = false;
 
-    public Color foreground = CellStyle.getForeground();
-    public Color background = CellStyle.getBackground();
+    private Color foreground = CellStyle.getForeground();
+    private Color background = CellStyle.getBackground();
     public int style = CellStyle.REGULAR;
 
     Cursor(Screen screen, Buffer buffer) {
@@ -29,6 +30,7 @@ public class Cursor {
         c.x = x;
         c.y = y;
         c.wrapDue = wrapDue;
+        c.inverted = inverted;
         c.visible = visible;
         c.blinking = blinking;
         c.foreground = foreground;
@@ -52,6 +54,33 @@ public class Cursor {
 
     public void setY(int y) {
         this.y = y;
+    }
+
+    public void setForeground(Color foreground) {
+        if (inverted) {
+            background = foreground;
+        }
+        else {
+            this.foreground = foreground;
+        }
+    }
+
+    public void setBackground(Color background) {
+        if (inverted) {
+            foreground = background;
+        }
+        else {
+            this.background = background;
+        }
+    }
+
+    public void setInverted(boolean inverted) {
+        if (this.inverted != inverted) {
+            this.inverted = inverted;
+            Color temp = foreground;
+            foreground = background;
+            background = temp;
+        }
     }
 
     public void up(int n) {
@@ -163,12 +192,6 @@ public class Cursor {
         for (int i = buffer.width - 1 - w; i < buffer.width; i++) {
             clearCell(i, y);
         }
-    }
-
-    public void invertColors() {
-        Color temp = background;
-        background = foreground;
-        foreground = temp;
     }
 
     void clear() {
