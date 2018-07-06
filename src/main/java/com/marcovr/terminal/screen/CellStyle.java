@@ -18,8 +18,8 @@ public class CellStyle {
     private static Font baseFont = new Font("Courier New", Font.PLAIN,12);
     private static Font[] fonts;
 
-    private static Color[] foregrounds, backgrounds;
-    private static final int DEFAULT_COLOR = 9;
+    private static Color[] colors;
+    private static Color foreground, background;
 
     static {
 
@@ -39,47 +39,62 @@ public class CellStyle {
             fonts[i] = baseFont.deriveFont(attributes);
         }
 
-        foregrounds = new Color[18];
-        backgrounds = new Color[18];
+        colors = new Color[256];
 
+        // 8 base colors & 8 bright colors
+        int c = 0;
         int shade = 187;
         for (int i = 0; i < 8; i++) {
             int r = (i & 1) * shade;
             int g = ((i & 2) >> 1) * shade;
             int b = ((i & 4) >> 2) * shade;
-            foregrounds[i] = new Color(r , g, b);
+            colors[c++] = new Color(r , g, b);
         }
-        foregrounds[8] = Color.WHITE;
         shade = 85;
         for (int i = 0; i < 8; i++) {
             int r = (((i & 1) << 1) + 1) * shade;
             int g = ((i & 2) + 1) * shade;
             int b = (((i & 4) >> 1) + 1) * shade;
-            foregrounds[i + 10] = new Color(r , g, b);
+            colors[c++] = new Color(r , g, b);
         }
-        foregrounds[DEFAULT_COLOR] = foregrounds[7];
-        System.arraycopy(foregrounds, 0, backgrounds, 0, 18);
-        backgrounds[DEFAULT_COLOR] = backgrounds[0];
+
+        // 216 additional colors
+        for (int i = 0; i < 6; i++) {
+            int r = i == 0 ? 0 : i * 40 + 55;
+            for (int j = 0; j < 6; j++) {
+                int g = j == 0 ? 0 : j * 40 + 55;
+                for (int k = 0; k < 6; k++) {
+                    int b = k == 0 ? 0 : k * 40 + 55;
+                    colors[c++] = new Color(r, g, b);
+                }
+            }
+        }
+
+        // 24 gray-scales
+        for (int i = 0; i < 24; i++) {
+            int g = 10 * i + 8;
+            colors[c++] = new Color(g, g, g);
+        }
+
+        // default colors
+        foreground = colors[7];
+        background = colors[0];
     }
 
     public static Font getFont(int style) {
         return fonts[style];
     }
 
-    public static Color getForeground(int color) {
-        return foregrounds[color];
-    }
-
-    public static Color getBackground(int color) {
-        return backgrounds[color];
+    public static Color getColor(int color) {
+        return colors[color];
     }
 
     public static Color getForeground() {
-        return foregrounds[DEFAULT_COLOR];
+        return foreground;
     }
 
     public static Color getBackground() {
-        return backgrounds[DEFAULT_COLOR];
+        return background;
     }
 
 }

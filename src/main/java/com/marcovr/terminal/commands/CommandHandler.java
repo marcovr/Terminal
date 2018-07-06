@@ -6,6 +6,7 @@ import com.marcovr.terminal.screen.Cursor;
 import com.marcovr.terminal.ssh.ConnectionHandler;
 import com.marcovr.terminal.Terminal;
 
+import java.awt.*;
 import java.io.EOFException;
 import java.io.IOException;
 
@@ -252,67 +253,79 @@ public class CommandHandler {
     }
 
     private void applySGRArg(int x) {
-        if (x < 30) {
-            switch(x) {
-                case 0:
-                    cursor.setForeground(CellStyle.getForeground());
-                    cursor.setBackground(CellStyle.getBackground());
-                    cursor.style = CellStyle.REGULAR;
-                    break;
-                case 1:
-                case 5:
-                    cursor.style = cursor.style | CellStyle.BOLD;
-                    break;
-                case 2:
-                case 3:
-                    cursor.style = cursor.style | CellStyle.ITALIC;
-                    break;
-                case 4:
-                    cursor.style = cursor.style | CellStyle.UNDERLINE;
-                    break;
-                case 7:
-                    cursor.setInverted(true);
-                    break;
-                /*case 8:
-                    // conceal
-                    break;*/
-                case 21:
-                case 22:
-                case 25:
-                    cursor.style = cursor.style & ~CellStyle.BOLD;
-                    break;
-                case 23:
-                    cursor.style = cursor.style & ~CellStyle.ITALIC;
-                    break;
-                case 24:
-                    cursor.style = cursor.style & ~CellStyle.UNDERLINE;
-                    break;
-                case 27:
-                    cursor.setInverted(false);
-                    break;
-                /*case 28:
-                    // reveal
-                    break;*/
-            }
-        }
-        else if (x < 40) {
-            x -= 30;
-            cursor.setForeground(CellStyle.getForeground(x));
-        }
-        else if (x < 50) {
-            x -= 40;
-            cursor.setBackground(CellStyle.getBackground(x));
-        }
-        else if (x >= 90 && x <= 97) {
-            x -= 80;
-            cursor.setForeground(CellStyle.getForeground(x));
-        }
-        else if (x >= 100 && x <= 107) {
-            x -= 90;
-            cursor.setBackground(CellStyle.getBackground(x));
-        }
-        else {
-            unsupported("SGR " + x);
+        switch(x) {
+            case 0:
+                cursor.setForeground(CellStyle.getForeground());
+                cursor.setBackground(CellStyle.getBackground());
+                cursor.style = CellStyle.REGULAR;
+                cursor.setInverted(false);
+                break;
+            case 1:
+            case 5:
+                cursor.style = cursor.style | CellStyle.BOLD;
+                break;
+            case 2:
+            case 3:
+                cursor.style = cursor.style | CellStyle.ITALIC;
+                break;
+            case 4:
+                cursor.style = cursor.style | CellStyle.UNDERLINE;
+                break;
+            case 7:
+                cursor.setInverted(true);
+                break;
+            /*case 8:
+                // conceal
+                break;*/
+            case 21:
+            case 22:
+            case 25:
+                cursor.style = cursor.style & ~CellStyle.BOLD;
+                break;
+            case 23:
+                cursor.style = cursor.style & ~CellStyle.ITALIC;
+                break;
+            case 24:
+                cursor.style = cursor.style & ~CellStyle.UNDERLINE;
+                break;
+            case 27:
+                cursor.setInverted(false);
+                break;
+            /*case 28:
+                // reveal
+                break;*/
+            case 30: case 31: case 32: case 33: case 34: case 35: case 36: case 37:
+                cursor.setForeground(CellStyle.getColor(x - 30));
+                break;
+            case 38:
+                Color c = getSGRColor();
+                if (c != null) {
+                    cursor.setForeground(c);
+                }
+                break;
+            case 39:
+                cursor.setForeground(CellStyle.getForeground());
+                break;
+            case 40: case 41: case 42: case 43: case 44: case 45: case 46: case 47:
+                cursor.setBackground(CellStyle.getColor(x - 40));
+                break;
+            case 48:
+                c = getSGRColor();
+                if (c != null) {
+                    cursor.setBackground(c);
+                }
+                break;
+            case 49:
+                cursor.setBackground(CellStyle.getBackground());
+                break;
+            case 90: case 91: case 92: case 93: case 94: case 95: case 96: case 97:
+                cursor.setForeground(CellStyle.getColor(x - 82));
+                break;
+            case 100: case 101: case 102: case 103: case 104: case 105: case 106: case 107:
+                cursor.setBackground(CellStyle.getColor(x - 92));
+                break;
+            default:
+                unsupported("SGR " + x);
         }
     }
 
@@ -426,5 +439,30 @@ public class CommandHandler {
                 screen.clearLine(cursor.getY());
                 break;
         }
+    }
+
+    private Color getSGRColor() {
+        int n = numArgs.consumeArgOrDef(0);
+        switch (n) {
+            case 2:
+                int r = numArgs.consumeArgOrDef(-1);
+                int g = numArgs.consumeArgOrDef(-1);
+                int b = numArgs.consumeArgOrDef(-1);
+                if (r >= 0 && r <= 255 && g >= 0 && g <= 255 && b >= 0 && b <= 255) {
+                    return new Color(r, g, b);
+                }
+                unsupported("SGR color-rgb: " + r + ";" + g + ";" + b);
+                break;
+            case 5:
+                int c = numArgs.consumeArgOrDef(-1);
+                if (c >= 0 && c <= 255) {
+                    return CellStyle.getColor(c);
+                }
+                unsupported("SGR color-256: " + c);
+                break;
+            default:
+                unsupported("SGR color " + n);
+        }
+        return null;
     }
 }
