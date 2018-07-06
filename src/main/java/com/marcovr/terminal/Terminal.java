@@ -313,6 +313,6 @@ public class Terminal {
     }
 
     private void removeState(int state) {
-        frame.setState(frame.getState() ^ state);
+        frame.setState(frame.getState() & ~state);
     }
 }
