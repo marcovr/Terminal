@@ -145,8 +145,9 @@ public class Screen {
         cursor.write(s);
     }
 
-    public synchronized void writeBlank() {
-        cursor.write(' ');
+    public synchronized void insertBlanks(int n) {
+        buffer.clearSelection();
+        cursor.insertBlanks(n);
     }
 
     public synchronized void paint(Graphics2D g, boolean hasFocus) {

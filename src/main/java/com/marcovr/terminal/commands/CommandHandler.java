@@ -114,7 +114,7 @@ public class CommandHandler {
 
         switch (b) {
             case '@': // Blanks
-                times(n, screen::writeBlank);
+                screen.insertBlanks(n);
                 break;
             case 'A':
                 cursor.up(n);
@@ -383,12 +383,6 @@ public class CommandHandler {
     private void unsupported(String text, int b) {
         handler.println();
         System.err.println("unsupported: " + text + " " + (char)b + " [" + b + "]");
-    }
-
-    private void times(int n, Runnable r) {
-        for (int i = 0; i < n; i++) {
-            r.run();
-        }
     }
 
     private void erase(int n) {

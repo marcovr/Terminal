@@ -184,12 +184,21 @@ public class Cursor {
         return false;
     }
 
+    void insertBlanks(int n) {
+        Cell[] line = buffer.cells[y];
+        int w = x + n;
+        System.arraycopy(line, x, line, w, buffer.width - w);
+        for (int i = x; i < w; i++) {
+            clearCell(i, y);
+        }
+    }
+
     void delete(int n) {
         wrapDue = false;
         Cell[] line = buffer.cells[y];
         int w = x + n;
-        System.arraycopy(line, w, line, x, buffer.width - 1 - w);
-        for (int i = buffer.width - 1 - w; i < buffer.width; i++) {
+        System.arraycopy(line, w, line, x, buffer.width - w);
+        for (int i = buffer.width - n; i < buffer.width; i++) {
             clearCell(i, y);
         }
     }
