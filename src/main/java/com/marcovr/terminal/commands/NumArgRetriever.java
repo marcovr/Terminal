@@ -3,13 +3,14 @@ package com.marcovr.terminal.commands;
 import com.marcovr.terminal.ssh.ConnectionHandler;
 
 import java.io.IOException;
-import java.util.Iterator;
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Allows to create a list of integer arguments out of characters read from ConnectionHandler
  */
-class NumArgRetriever implements Iterable<Integer> {
+class NumArgRetriever {
 
     private final LinkedList<Integer> args = new LinkedList<>();
     private final ConnectionHandler handler;
@@ -93,6 +94,10 @@ class NumArgRetriever implements Iterable<Integer> {
         return !args.isEmpty();
     }
 
+    public List<Integer> toList() {
+        return new ArrayList<>(args);
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -106,10 +111,5 @@ class NumArgRetriever implements Iterable<Integer> {
             }
         }
         return sb.toString();
-    }
-
-    @Override
-    public Iterator<Integer> iterator() {
-        return args.iterator();
     }
 }

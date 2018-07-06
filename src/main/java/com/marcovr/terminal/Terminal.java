@@ -3,6 +3,7 @@ package com.marcovr.terminal;
 import com.marcovr.terminal.GUI.TerminalFrame;
 import com.marcovr.terminal.commands.CommandHandler;
 import com.marcovr.terminal.misc.KeyTranslator;
+import com.marcovr.terminal.screen.CellStyle;
 import com.marcovr.terminal.screen.Screen;
 import com.marcovr.terminal.ssh.ConnectionHandler;
 import com.marcovr.terminal.ssh.CredentialsHandler;
@@ -225,5 +226,93 @@ public class Terminal {
      */
     public void repaint() {
         frame.repaint();
+    }
+
+    public boolean handleXterm(int n, java.util.List<Integer> args) {
+        if (args.size() > 2) {
+            return false;
+        }
+
+        switch (n) {
+            case 1:
+                removeState(Frame.ICONIFIED);
+                break;
+            case 2:
+                addState(Frame.ICONIFIED);
+                break;
+            case 3:
+                if (args.size() < 2) {
+                    return false;
+                }
+                frame.setLocation(args.get(0), args.get(1));
+                break;
+            case 4:
+                if (args.size() < 2) {
+                    return false;
+                }
+                frame.getContentPane().setPreferredSize(new Dimension(args.get(1), args.get(0)));
+                frame.pack();
+                break;
+            case 5:
+                frame.toFront();
+                break;
+            case 6:
+                frame.toBack();
+                break;
+            case 7:
+                frame.repaint();
+                break;
+            case 8:
+                if (args.size() < 2) {
+                    return false;
+                }
+                int width = CellStyle.WIDTH * args.get(1) + 2;
+                int height = CellStyle.HEIGHT * args.get(0) + 2;
+                frame.setSize(width, height);
+                break;
+            case 9:
+                if (args.size() == 0) {
+                    return false;
+                }
+                switch (args.get(0)) {
+                    case 0: removeState(Frame.MAXIMIZED_BOTH);
+                    case 1: addState(Frame.MAXIMIZED_BOTH);
+                }
+                break;
+            case 11:
+                int iconified = (frame.getState() & Frame.ICONIFIED) + 1;
+                handler.send("\033[" + iconified + "t");
+                break;
+            case 13:
+                Point p = frame.getLocation();
+                handler.send("\033[3;" + p.x + ";" + p.y + "t");
+                break;
+            case 14:
+                Dimension s = frame.getContentPane().getSize();
+                handler.send("\033[3;" + s.height + ";" + s.width + "t");
+                break;
+            case 18:
+                handler.send("\033[8;" + screen.getHeight() + ";" + screen.getWidth() + "t");
+                break;
+            case 19:
+                handler.send("\033[9;" + screen.getHeight() + ";" + screen.getWidth() + "t");
+                break;
+            case 20:
+                handler.send("\033]L" + frame.getTitle() + "\033\\");
+                break;
+            case 21:
+                handler.send("\033]l" + frame.getTitle() + "\033\\");
+                break;
+            default: return false;
+        }
+        return true;
+    }
+
+    private void addState(int state) {
+        frame.setState(frame.getState() | state);
+    }
+
+    private void removeState(int state) {
+        frame.setState(frame.getState() ^ state);
     }
 }

@@ -55,6 +55,9 @@ public class CommandHandler {
         switch (b) {
             case 0: // NUL
                 break;
+            case 5: // ENQ
+                handler.send("Terminal");
+                break;
             case 7: // BEL
                 java.awt.Toolkit.getDefaultToolkit().beep();
                 break;
@@ -192,6 +195,12 @@ public class CommandHandler {
             case 'r':
                 screen.scrollTop = n - 1;
                 screen.scrollBottom = numArgs.getArgOrDef(1, screen.getHeight());
+                break;
+            case 't':
+                numArgs.consumeArgOrDef(0);
+                if (!terminal.handleXterm(n, numArgs.toList())) {
+                    unsupported("CSI " + n + ";" + numArgs + " t");
+                }
                 break;
 
             case '?':
